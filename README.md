@@ -1,65 +1,102 @@
-# ESP32-S3 Ultra-Fast RGB Color Tracker
+# ESP32-S3 Ultra-Fast Color Tracking Vision
 
 ## Overview
-This project provides an ultra-fast, raw color blob tracking algorithm designed specifically for the ESP32-S3 microprocessor equipped with a camera module. By processing raw `RGB565` image data directly from the camera's frame buffer (bypassing slow JPEG compression), the algorithm achieves processing speeds limited only by the camera's framerate. 
+This repository contains two ultra-fast, raw color blob tracking algorithms designed specifically for the ESP32-S3 microcontroller equipped with an OV5640 camera module. 
 
-It tracks a user-defined target color (inputted as a standard web Hex code) and calculates the center of mass and size of the detected color blob in real-time. 
+By processing raw `RGB565` image data directly from the camera's frame buffer—and bypassing slow JPEG compression entirely—these algorithms achieve real-time processing speeds limited only by the camera's framerate. Both versions track a user-defined target color (using standard web Hex codes) and calculate the center of mass (`X, Y`) and the pixel size of the detected object.
 
-## Features
-* **Blazing Fast Execution:** Uses direct memory access and bitwise math on raw `RGB565` pixels, avoiding costly format conversions.
-* **Web-Friendly Color Input:** Converts standard Hex color codes (e.g., `#067EC8`) into camera-native 5-6-5 bit RGB thresholds automatically.
-* **Center of Mass Calculation:** Returns the `X, Y` coordinates of the tracked object, making it ideal for robotic tracking and motor control.
-* **Proximity Estimation:** Returns the total pixel count of the blob, which can be used to estimate how close the object is to the lens.
-* **Low Resolution Target:** Locked to `QQVGA` (160x120) for maximum framerate and stability.
+## Which Version Should I Choose?
+
+| Feature | Basic RGB Tracker | Advanced HSV Tracker |
+| :--- | :--- | :--- |
+| **Best For** | Highly controlled, consistent lighting environments. | Real-world environments with shadows, glares, or changing light. |
+| **Color Math** | Strict RGB matching. | Hue tracking (filters out low saturation/brightness). |
+| **Speed** | Absolute maximum framerate. | Slightly heavier math, but still incredibly fast. |
+| **Status Feedback** | Serial Monitor only. | Visual feedback via onboard NeoPixel (WS2812). |
+| **Noise Filtering** | None (tracks every matching pixel). | Includes a Minimum Blob Size filter to ignore rogue artifacts. |
+| **Sensor Override** | Default camera auto-settings. | Overrides Auto-White Balance (AWB) to prevent color shifting. |
+
+## Repository Structure
+```text
+ESP32S3_N16R8_RGB565_Colour_Detection/
+│
+├── Basic_RGB_Tracker/
+│   ├── STRICT_RGB_H.h
+│   └── main.cpp
+│
+├── Advanced_HSV_Tracker/
+│   ├── STRICT_HSV_H.h
+│   └── main.cpp
+│
+└── README.md
+```
 
 ## Hardware Requirements
-* **Microcontroller:** ESP32-S3 (WROOM or similar)
-* **Camera:** Standard ESP32 compatible camera module (e.g., OV2640, configured for Freenove or generic S3 pinouts).
+* **Microcontroller:** ESP32-S3 (WROOM or similar generic boards). Mine is configured for the N16R8 with `psram`.
 
-## Usage
+* **Camera:** Standard ESP32 compatible camera module (e.g., I used the OV5640). Pinouts are pre-configured for Freenove boards.
 
-### 1. Configuration
-The camera pinout is pre-configured for generic ESP32-S3 WROOM / Freenove boards. If you are using an AI-Thinker board or a different custom board, you will need to update the `GPIO_NUM` definitions at the top of the header file.
+* **Status LED:** (HSV Version Only) Onboard WS2812 / NeoPixel on GPIO 48.
 
-### 2. Setting the Target Color
-Inside the `initVision()` function, the target color is set using the `setThresholdsFromHex` function:
+## Installation & Setup
+### For Arduino IDE Users
+Download or clone this repository.
 
-```cpp
-// Look for Blue (#067EC8) with a tolerance of 1
+1. Open either `Basic_RGB_Tracker/main.cpp` or `Advanced_HSV_Tracker/main.cpp` in the Arduino IDE (you may need to rename `.cpp` to `.ino` depending on your IDE version).
+
+2. Ensure you have the ESP32 board manager installed and your specific board selected.
+
+3. **HSV Version Only:** Install the `Adafruit NeoPixel` library via the Library Manager.
+
+4. Compile and upload.
+
+### For PlatformIO Users
+1. Clone this repository into your PlatformIO workspace.
+
+2. Open either the `Basic_RGB_Tracker` or `Advanced_HSV_Tracker` folder as your active project.
+
+3. Initialize your `platformio.ini` file for your specific ESP32-S3 board (e.g., `board = esp32-s3-devkitc-1` or `4d_systems_esp32s3_gen4_r8n16` if you have my exact configuration).
+
+4. **HSV Version Only:** Add the NeoPixel library to your platformio.ini dependencies:
+
+```Ini, TOML
+lib_deps = adafruit/Adafruit NeoPixel @ ^1.11.0
+Build and upload.
+```
+
+### Quick Configuration
+1. **Pinouts**
+If you are using an AI-Thinker board or a custom PCB, ensure you update the Camera GPIO_NUM definitions at the top of the header files to match your specific hardware.
+
+2. **Setting Your Target Color**
+Both algorithms use standard Web Hex codes to find colors, making it incredibly easy to configure.
+
+**For the Basic RGB Version:**
+Inside `initVision()`, define the Hex code and a tight tolerance (usually 1 to 5).
+
+```C++
+// Look for Blue (#067EC8) with an RGB565 tolerance of 1
 setThresholdsFromHex("#067EC8", 1);
 ```
 
-* **Parameter 1:** The target Hex color.
+**For the Advanced HSV Version:**
+Inside `initHueVision()`, define the Hex code and a generous Hue degree window (usually 5.0 to 15.0).
 
-* **Parameter 2:** The tolerance level. Because RGB565 scales values down (Red/Blue max 31, Green max 63), a tolerance of 1 or 2 provides a strict color match.
-
-### 3. Implementation in main.cpp or Sketch
-Include the header file and call the initialization and loop functions within your main Arduino structure:
-
-```cpp
-#include "STRICT_RGB_H"
-
-void setup() {
-  // Initializes Serial, configures the camera, and sets the color thresholds
-  initVision();
-}
-
-void loop() {
-  // Grabs a frame, finds the blob, and prints the X/Y coordinates
-  runVision();
-}
+```C++
+// Look for Blue (#067EC8) with a 5-degree Hue tolerance window
+setTargetColorHex("#067EC8", 5.0);
 ```
 
-### Function Breakdown
-* **setThresholdsFromHex(const char* hexString, int tolerance):** Parses a web Hex string, downscales standard 8-bit RGB (0-255) into RGB565 (0-31, 0-63, 0-31), and calculates the acceptable search boundaries based on the tolerance window.
+3. **Tuning the HSV Tracker**
+The HSV tracker includes several global variables at the top of the file to fine-tune the vision:
 
-* **findColorBlob(camera_fb_t *fb):** Iterates through the entire 160x120 frame buffer. If a pixel matches the calculated thresholds, its X/Y coordinates are added to a sum. Finally, it averages all valid coordinates to find the center of the blob. Returns a TrackingResult struct.
+* `min_s`: Increase this (e.g., 0.3) to ignore grayish, washed-out colors.
 
-* **initVision():** Boots the camera with PIXFORMAT_RGB565 and FRAMESIZE_QQVGA configuration.
+* `min_v`: Increase this (e.g., 0.2) to ignore pitch-black shadows.
 
-* **runVision():** Fetches the frame buffer, passes it to the math function, logs the coordinates via Serial, and crucially returns the frame buffer to prevent memory leaks.
+* `MIN_BLOB_SIZE`: Increase this (e.g., 50) if the tracker is getting distracted by tiny specs of color in the background.
 
 ### Important Limitations
-* **Lighting Dependent:** Because this algorithm uses strict RGB thresholds instead of HSV (Hue, Saturation, Value), it is highly sensitive to changes in lighting. It works best in fully lit environments with consistent, uniform lighting.
+* **Resolution:** Both trackers lock the camera to QQVGA (160x120). This low resolution is intentional; it keeps the memory footprint small and ensures the highest possible framerate for real-time robotic reactions.
 
-* **No Multiple Object Tracking:** This algorithm calculates a single center of mass. If two objects of the exact same color are in the frame, the reported X, Y coordinates will be the midpoint between the two objects.
+* **Single Object Tracking:** These algorithms calculate a single Center of Mass. If two objects of the exact same target color are in the frame, the reported X, Y coordinates will be the midpoint between the two objects.
