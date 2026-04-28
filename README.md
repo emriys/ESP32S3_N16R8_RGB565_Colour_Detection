@@ -72,14 +72,15 @@ Download or clone this repository.
 
 ```Ini, TOML
 lib_deps = adafruit/Adafruit NeoPixel @ ^1.11.0
-Build and upload.
 ```
 
+5. Build and upload.
+
 ### Quick Configuration
-1. **Pinouts**
+1. **Pinouts:**
 If you are using an AI-Thinker board or a custom PCB, ensure you update the Camera GPIO_NUM definitions at the top of the header files to match your specific hardware.
 
-2. **Setting Your Target Color**
+2. **Setting Your Target Color:**
 Both algorithms use standard Web Hex codes to find colors, making it incredibly easy to configure.
 
 **For the Basic RGB Version:**
@@ -98,7 +99,7 @@ Inside `initHueVision()`, define the Hex code and a generous Hue degree window (
 setTargetColorHex("#067EC8", 5.0);
 ```
 
-3. **Tuning the HSV Tracker**
+3. **Tuning the HSV Tracker:**
 The HSV tracker includes several global variables at the top of the file to fine-tune the vision:
 
 * `min_s`: Increase this (e.g., 0.3) to ignore grayish, washed-out colors.
