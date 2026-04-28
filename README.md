@@ -21,13 +21,24 @@ By processing raw `RGB565` image data directly from the camera's frame buffer, a
 ESP32S3_N16R8_RGB565_Colour_Detection/
 │
 ├── Basic_RGB_Tracker/
-│   ├── STRICT_RGB_H.h
-│   └── main.cpp
+│   ├── include
+│   ├── lib
+│   ├── src
+│   │ ├── main.cpp
+│   │ └── strict_RGB.h
+│   ├── test
+│   ├── .gitignore
+│   └── platform.io
 │
 ├── Advanced_HSV_Tracker/
-│   ├── STRICT_HSV_H.h
-│   └── main.cpp
-│
+│   ├── include
+│   ├── lib
+│   ├── src
+│   │ ├── main.cpp
+│   │ └── hue_RGB.h
+│   ├── test
+│   ├── .gitignore
+│   └── platform.io
 └── README.md
 ```
 
