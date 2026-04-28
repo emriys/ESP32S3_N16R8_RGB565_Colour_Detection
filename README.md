@@ -3,7 +3,7 @@
 ## Overview
 This repository contains two ultra-fast, raw color blob tracking algorithms designed specifically for the ESP32-S3 microcontroller equipped with an OV5640 camera module. 
 
-By processing raw `RGB565` image data directly from the camera's frame buffer—and bypassing slow JPEG compression entirely—these algorithms achieve real-time processing speeds limited only by the camera's framerate. Both versions track a user-defined target color (using standard web Hex codes) and calculate the center of mass (`X, Y`) and the pixel size of the detected object.
+By processing raw `RGB565` image data directly from the camera's frame buffer, and bypassing slow JPEG compression entirely, these algorithms achieve real-time processing speeds limited only by the camera's framerate. Both versions track a user-defined target color (using standard web Hex codes) and calculate the center of mass (`X, Y`) and the pixel size of the detected object.
 
 ## Which Version Should I Choose?
 
@@ -34,7 +34,7 @@ ESP32S3_N16R8_RGB565_Colour_Detection/
 ## Hardware Requirements
 * **Microcontroller:** ESP32-S3 (WROOM or similar generic boards). Mine is configured for the N16R8 with `psram`.
 
-* **Camera:** Standard ESP32 compatible camera module (e.g., I used the OV5640). Pinouts are pre-configured for Freenove boards.
+* **Camera:** Standard ESP32 compatible camera module (I used the OV5640). Pinouts are pre-configured for Freenove boards.
 
 * **Status LED:** (HSV Version Only) Onboard WS2812 / NeoPixel on GPIO 48.
 
